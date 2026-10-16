@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101d3a">
+    <meta name="description" content="Create your MULALINK account.">
+    <title>Create account · MULALINK</title>
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./auth.css">
+    <script src="./auth.js" defer></script>
+  </head>
+  <body class="auth-body">
+    <main class="auth-layout">
+      <section class="auth-brand-panel">
+        <a class="brand" href="/" aria-label="MULALINK home">
+          <span class="brand-mark">M</span>
+          <span class="brand-copy"><strong>MULALINK</strong><small>Earn more. Every day.</small></span>
+        </a>
+        <div class="auth-brand-message">
+          <span class="auth-kicker">A little progress, every day</span>
+          <h1>Make room for<br>what's next.</h1>
+          <p>One account to explore learning, community, and genuine opportunities — at your own pace.</p>
+          <div class="auth-trust"><span>✓</span> Your account is protected with secure sign-in</div>
+        </div>
+        <span class="auth-brand-footer">MULALINK · Earn more. Every day.</span>
+      </section>
+
+      <section class="auth-form-panel">
+        <div class="auth-form-wrap">
+          <div class="auth-mobile-brand"><span class="brand-mark">M</span><strong>MULALINK</strong></div>
+          <div class="auth-overline">GET STARTED</div>
+          <h2>Create your account</h2>
+          <p class="auth-intro">Join MULALINK. An administrator must activate your account before you can access the dashboard.</p>
+
+          <form id="register-form" novalidate>
+            <label class="field">Full name
+              <input name="fullName" type="text" autocomplete="name" minlength="2" maxlength="100" placeholder="e.g. Amina Wekesa" required>
+            </label>
+            <label class="field">Username
+              <input name="username" type="text" autocomplete="username" minlength="3" maxlength="30" pattern="[A-Za-z0-9._]+" title="Use 3–30 letters, numbers, periods, or underscores." placeholder="e.g. amina_wekesa" required>
+            </label>
+            <div class="auth-fields-row">
+              <label class="field">Email address
+                <input name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+              </label>
+              <label class="field">Phone number
+                <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+254 712 345 678" pattern="^\+[1-9][0-9 ]{7,19}$" title="Use international format, for example +254712345678" required>
+              </label>
+            </div>
+            <label class="field">Password
+              <input name="password" type="password" autocomplete="new-password" minlength="5" maxlength="72" placeholder="At least 5 characters" required>
+            </label>
+            <label class="field">Confirm password
+              <input name="confirmPassword" type="password" autocomplete="new-password" minlength="5" maxlength="72" placeholder="Enter your password again" required>
+            </label>
+            <label class="consent-row">
+              <input name="acceptedTerms" type="checkbox" required>
+              <span>I agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+            </label>
+            <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+            <button class="button button-primary auth-submit" type="submit"><span>Create account</span><span aria-hidden="true">→</span></button>
+          </form>
+          <p class="auth-switch">Already have an account? <a href="/login">Sign in</a></p>
+          <p class="auth-disclaimer">Registration stores your account securely on the configured server. Wallet and earning features remain demo-only.</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

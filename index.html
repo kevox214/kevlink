@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101d3a">
+    <meta name="description" content="MULALINK — Earn more. Every day. Discover learning, tasks, and opportunities in one place.">
+    <title>MULALINK — Earn more. Every day.</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#dashboard" aria-label="MULALINK dashboard">
+          <span class="brand-mark">M</span>
+          <span class="brand-copy"><strong>MULALINK</strong><small>Earn more. Every day.</small></span>
+        </a>
+        <div class="workspace-label">WORKSPACE</div>
+        <nav id="sidebar-nav" aria-label="Main navigation"></nav>
+        <div class="sidebar-bottom">
+          <div class="help-card">
+            <span class="help-icon">?</span>
+            <strong>Need a hand?</strong>
+            <span>We're here to help you get started.</span>
+            <a href="#help-and-support">Visit help center <span aria-hidden="true">↗</span></a>
+          </div>
+          <button class="profile-mini" data-page="profile">
+            <span class="avatar avatar-small profile-initials">JM</span>
+            <span class="profile-copy"><strong class="profile-name">Jane Mwangi</strong><small>Member account</small></span>
+            <span class="more-dots" aria-hidden="true">···</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-column">
+        <header class="topbar">
+          <button id="menu-toggle" class="icon-button mobile-menu" aria-label="Open navigation" aria-expanded="false">☰</button>
+          <div class="breadcrumb"><span>Workspace</span><span class="crumb-slash">/</span><strong id="page-title">Dashboard</strong></div>
+          <div class="topbar-actions">
+            <div class="demo-pill"><span></span> DEMO MODE</div>
+            <button class="icon-button notification-button" data-page="notifications" aria-label="Notifications">♧<i></i></button>
+            <button class="top-user" data-page="profile"><span class="avatar profile-initials">JM</span><span class="profile-name">Jane Mwangi</span><span class="chevron">⌄</span></button>
+          </div>
+        </header>
+        <section id="page-content" class="page-content" tabindex="-1"></section>
+        <footer class="footer">
+          <span>© 2026 MULALINK</span>
+          <span class="footer-links"><a href="#help-and-support">Help center</a><a href="#profile">Privacy</a><span>Prototype · No real payments</span></span>
+        </footer>
+      </main>
+    </div>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <div id="modal-root"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

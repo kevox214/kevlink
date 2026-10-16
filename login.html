@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f8fb">
+    <meta name="description" content="Sign in to your MULALINK account.">
+    <title>Sign in · MULALINK</title>
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./auth.css">
+    <script src="./auth.js" defer></script>
+  </head>
+  <body class="login-body">
+    <main class="login-page">
+      <a class="login-brand" href="/" aria-label="MULALINK home">
+        <span class="brand-mark">M</span>
+        <span><strong>MULALINK</strong><small>Earn more. Every day.</small></span>
+      </a>
+      <section class="login-card">
+        <div class="login-card-icon" aria-hidden="true">↗</div>
+        <div class="auth-overline">WELCOME BACK</div>
+        <h1>Sign in</h1>
+        <p class="auth-intro">Pick up where you left off.</p>
+        <form id="login-form" novalidate>
+          <label class="field">Email or phone number
+            <input name="identifier" type="text" autocomplete="username" required placeholder="you@example.com or +254712345678">
+          </label>
+          <label class="field">Password
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <label class="admin-toggle" for="admin-mode">
+            <input id="admin-mode" name="role" type="checkbox" value="admin">
+            <span>Sign in as admin</span>
+          </label>
+          <p class="login-help">Forgot your password? <span>Password recovery will be available after email or SMS verification is configured.</span></p>
+          <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+          <button class="button button-primary auth-submit" type="submit"><span>Sign in securely</span><span aria-hidden="true">→</span></button>
+        </form>
+        <div class="login-divider"><span>NEW TO MULALINK?</span></div>
+        <a class="login-register-link" href="/register">Create a free account <span aria-hidden="true">↗</span></a>
+      </section>
+      <footer class="login-footer"><span>Secure account access</span><span>·</span><a href="/privacy">Privacy</a><span>·</span><a href="/terms">Terms</a></footer>
+    </main>
+  </body>
+</html>

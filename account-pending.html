@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101d3a">
+    <meta name="description" content="Your MULALINK account is awaiting administrator activation.">
+    <title>Account awaiting activation · MULALINK</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/auth.css">
+    <style>
+      .activation-card{width:min(100% - 32px,520px);margin:12vh auto;padding:36px;border:1px solid #e9edf3;border-radius:14px;background:#fff;box-shadow:0 16px 48px #20294312}
+      .activation-brand{display:flex;align-items:center;gap:11px;margin-bottom:35px;color:#202943}
+      .activation-brand-copy{display:grid;gap:3px}
+      .activation-brand-copy strong{font-size:14px;letter-spacing:.08em}
+      .activation-brand-copy small{font-size:11px;color:#7d879b}
+      .activation-icon{display:grid;width:48px;height:48px;place-items:center;margin-bottom:19px;border-radius:50%;color:#94701c;background:#fff5df;font-size:23px}
+      .activation-card h1{margin-bottom:11px;font-size:25px}
+      .activation-card p{margin-bottom:13px;color:#69748a;line-height:1.7}
+      .activation-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
+      @media(max-width:520px){.activation-card{padding:26px}.activation-actions>*{width:100%}}
+    </style>
+  </head>
+  <body>
+    <main class="activation-card">
+      <a class="activation-brand" href="/login" aria-label="MULALINK sign in">
+        <span class="brand-mark">M</span>
+        <span class="activation-brand-copy"><strong>MULALINK</strong><small>Account activation</small></span>
+      </a>
+      <div class="activation-icon" aria-hidden="true">⌛</div>
+      <div class="auth-overline">APPROVAL REQUIRED</div>
+      <h1>Your account is awaiting activation</h1>
+      <p>An administrator must activate your account before you can access the MULALINK dashboard. Your account and sign-in details are saved; please check back after approval.</p>
+      <p>If you need help, contact <a href="mailto:kevox122@gmail.com?subject=MULALINK%20Account%20Activation">kevox122@gmail.com</a>. Please do not send your password.</p>
+      <div class="activation-actions">
+        <a class="button button-primary" href="/">Check activation status</a>
+        <form id="sign-out-form" action="/api/auth/logout" method="post"><button class="button button-secondary" type="submit">Sign out</button></form>
+      </div>
+    </main>
+    <script src="/pending.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101d3a">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin console · MULALINK</title>
+    <link rel="stylesheet" href="/admin.css">
+  </head>
+  <body>
+    <header class="admin-topbar">
+      <a class="brand" href="/admin"><span class="brand-mark">M</span><span><strong>MULALINK</strong><small>Administration</small></span></a>
+      <div class="top-actions"><span class="admin-label">ADMIN CONSOLE</span><button class="button button-secondary" id="sign-out">Sign out</button></div>
+    </header>
+    <main class="admin-main">
+      <section class="page-heading"><div><div class="eyebrow">PLATFORM MANAGEMENT</div><h1>Admin console</h1><p>Manage member accounts and review internal platform records.</p></div><button class="button button-primary" id="new-record">＋ Add internal record</button></section>
+      <div class="safety-notice"><strong>Internal records only.</strong> Tasks and prices are managed here. Purchase entries document client-reported orders; recording or cancelling them does not verify or move money, create a payment, or change a wallet balance.</div>
+      <section class="summary-grid" id="summary" aria-live="polite"><div class="summary-card loading">Loading platform totals…</div></section>
+      <nav class="tabs" aria-label="Admin sections">
+        <button class="tab active" data-tab="users">Members</button>
+        <button class="tab" data-tab="tasks">Tasks & pricing</button>
+        <button class="tab" data-tab="purchases">Client purchases</button>
+        <button class="tab" data-tab="records">Financial records</button>
+        <button class="tab" data-tab="audit">Audit log</button>
+      </nav>
+      <section class="panel tab-panel" id="users-panel">
+        <div class="panel-heading"><div><h2>Member accounts</h2><p>Search accounts and change a member's platform status.</p></div><form id="user-search" class="search-form"><input name="search" type="search" maxlength="100" placeholder="Name, username, email, or phone"><button class="button button-secondary">Search</button></form></div>
+        <div class="table-wrap"><table><thead><tr><th>Member</th><th>Contact</th><th>Status</th><th>Joined</th><th>Update status</th></tr></thead><tbody id="users-body"><tr><td colspan="5" class="empty">Loading members…</td></tr></tbody></table></div>
+      </section>
+      <section class="panel tab-panel" id="tasks-panel" hidden>
+        <div class="panel-heading"><div><h2>Tasks & pricing</h2><p>Create task listings, set prices, and pause or reactivate them. Prices are listings only.</p></div><button class="button button-primary" id="new-task">＋ Create task</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Task</th><th>Price</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody id="tasks-body"><tr><td colspan="5" class="empty">Loading tasks…</td></tr></tbody></table></div>
+      </section>
+      <section class="panel tab-panel" id="purchases-panel" hidden>
+        <div class="panel-heading"><div><h2>Client purchases</h2><p>Record client-reported purchases against the task's current listed price. These are not payment receipts.</p></div><div class="filters"><select id="purchase-status-filter" aria-label="Filter by purchase status"><option value="">All statuses</option><option value="pending">Pending review</option><option value="recorded">Recorded</option><option value="cancelled">Cancelled</option></select><button class="button button-primary" id="new-purchase">＋ Record purchase</button></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Reference</th><th>Client</th><th>Task</th><th>Quantity</th><th>Listed total</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody id="purchases-body"><tr><td colspan="8" class="empty">Loading purchases…</td></tr></tbody></table></div>
+      </section>
+      <section class="panel tab-panel" id="records-panel" hidden>
+        <div class="panel-heading"><div><h2>Payment, payout & commission records</h2><p>Review pending entries or create an internal record for tracking.</p></div><div class="filters"><select id="record-type-filter" aria-label="Filter by record type"><option value="">All types</option><option value="payment">Payment</option><option value="payout">Payout</option><option value="commission">Commission</option><option value="transaction">Transaction</option></select><select id="record-status-filter" aria-label="Filter by record status"><option value="">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Record</th><th>Member</th><th>Amount</th><th>Status</th><th>Created</th><th>Review</th></tr></thead><tbody id="records-body"><tr><td colspan="6" class="empty">Loading records…</td></tr></tbody></table></div>
+      </section>
+      <section class="panel tab-panel" id="audit-panel" hidden>
+        <div class="panel-heading"><div><h2>Administrator activity</h2><p>Recent account and internal-record changes.</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>When</th><th>Administrator</th><th>Action</th><th>Target</th><th>Details</th></tr></thead><tbody id="audit-body"><tr><td colspan="5" class="empty">Loading audit log…</td></tr></tbody></table></div>
+      </section>
+      <p class="page-error" id="page-error" role="alert" hidden></p>
+    </main>
+    <dialog id="record-dialog">
+      <form id="record-form">
+        <div class="dialog-heading"><div><div class="eyebrow">INTERNAL ONLY</div><h2>Add financial record</h2><p>This creates a pending tracking record only. It will not move funds.</p></div><button type="button" class="close-button" id="close-dialog" aria-label="Close">×</button></div>
+        <label>Record type<select name="type" required><option value="payment">Payment</option><option value="payout">Payout</option><option value="commission">Commission</option><option value="transaction">Transaction</option></select></label>
+        <label>Member account<select name="userId" id="record-user"><option value="">No member linked</option></select></label>
+        <div class="form-row"><label>Amount<input name="amount" type="number" min="0.01" max="100000000" step="0.01" required></label><label>Currency<input name="currency" value="KES" minlength="3" maxlength="3" pattern="[A-Za-z]{3}" required></label></div>
+        <label>Description<textarea name="description" maxlength="500" rows="3"></textarea></label>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button type="button" class="button button-secondary" id="cancel-dialog">Cancel</button><button class="button button-primary" type="submit">Create pending record</button></div>
+      </form>
+    </dialog>
+    <dialog id="task-dialog">
+      <form id="task-form">
+        <div class="dialog-heading"><div><div class="eyebrow">TASK LISTING</div><h2 id="task-dialog-title">Create task</h2><p>Price is an internal listing amount; this does not set up checkout or payment processing.</p></div><button type="button" class="close-button" id="close-task-dialog" aria-label="Close">×</button></div>
+        <input name="taskId" type="hidden">
+        <label>Task title<input name="title" maxlength="120" required></label>
+        <label>Description<textarea name="description" maxlength="1000" rows="3"></textarea></label>
+        <div class="form-row"><label>Price<input name="price" type="number" min="0.01" max="100000000" step="0.01" required></label><label>Currency<input name="currency" value="KES" minlength="3" maxlength="3" pattern="[A-Za-z]{3}" required></label></div>
+        <label>Status<select name="status"><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+        <p class="form-error" id="task-form-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button type="button" class="button button-secondary" id="cancel-task-dialog">Cancel</button><button class="button button-primary" type="submit">Save task</button></div>
+      </form>
+    </dialog>
+    <dialog id="purchase-dialog">
+      <form id="purchase-form">
+        <div class="dialog-heading"><div><div class="eyebrow">CLIENT-REPORTED</div><h2>Record client purchase</h2><p>This logs an order for internal tracking only. It does not verify payment or move funds.</p></div><button type="button" class="close-button" id="close-purchase-dialog" aria-label="Close">×</button></div>
+        <label>Client account<select name="userId" id="purchase-user" required><option value="">Select a client</option></select></label>
+        <label>Active task<select name="taskId" id="purchase-task" required><option value="">Select an active task</option></select></label>
+        <label>Quantity<input name="quantity" type="number" min="1" max="10000" step="1" value="1" required></label>
+        <p class="form-error" id="purchase-form-error" role="alert" hidden></p>
+        <div class="dialog-actions"><button type="button" class="button button-secondary" id="cancel-purchase-dialog">Cancel</button><button class="button button-primary" type="submit">Save pending purchase</button></div>
+      </form>
+    </dialog>
+    <script src="/admin.js" defer></script>
+  </body>
+</html>
