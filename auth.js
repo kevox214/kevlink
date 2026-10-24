@@ -39,7 +39,7 @@
         if (data.password !== data.confirmPassword) throw new Error("Your passwords don't match.");
         if (!form.elements.acceptedTerms.checked) throw new Error("Please accept the terms and privacy policy to continue.");
         const referralCode = new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase();
-        await api("/api/auth/register", {
+        const result = await api("/api/auth/register", {
           fullName: data.fullName.trim(),
           username: data.username.trim().toLowerCase(),
           email: data.email.trim(),
@@ -50,13 +50,13 @@
           acceptedTerms: form.elements.acceptedTerms.checked
         });
         destination = "/account-pending";
-        setMessage("Your account was created and is awaiting administrator activation.", true);
+        setMessage(result.activation?.error || "Account created. Check your registered phone for the KES 1 M-PESA prompt.", !result.activation?.error);
       } else {
         const role = form.elements.role && form.elements.role.checked ? "admin" : "user";
         const result = await api("/api/auth/login", { identifier: data.identifier.trim(), password: data.password, role });
         if (role !== "admin" && result.user.accountStatus !== "active") destination = "/account-pending";
         setMessage(destination === "/account-pending"
-          ? "Signed in. Your account is awaiting administrator activation."
+          ? "Signed in. Complete your KES 1 M-PESA activation test payment."
           : role === "admin" ? "Admin sign-in successful. Opening your workspace…" : "Signed in. Opening your MULALINK workspace…", true);
       }
       window.location.assign(destination);

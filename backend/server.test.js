@@ -1,12 +1,17 @@
 "use strict";
 
+process.env.DARAJA_CONSUMER_KEY = "";
+process.env.DARAJA_CONSUMER_SECRET = "";
+process.env.MPESA_CONSUMER_KEY = "";
+process.env.MPESA_CONSUMER_SECRET = "";
+
 process.env.DATABASE_URL ||= "postgresql://mulalink_test:mulalink_test@127.0.0.1:5432/mulalink_test";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const bcrypt = require("bcryptjs");
-const { app } = require("./server");
+const { app, activationService } = require("./server");
 const { pool } = require("./db");
 
 const users = new Map();
@@ -17,6 +22,12 @@ const clientPurchases = new Map();
 const auditEntries = [];
 const originalQuery = pool.query;
 const originalConnect = pool.connect;
+const originalStartActivation = activationService.start;
+const activationRequests = [];
+activationService.start = async user => {
+  activationRequests.push({ id: user.id, phone: user.phone });
+  return { statusCode: 202, payment: { id: crypto.randomUUID(), amount: 1, phone: user.phone.replace(/^\+/, ""), status: "pending" } };
+};
 let server;
 let baseUrl;
 let adminCookie;
@@ -67,6 +78,7 @@ function createFakeClient() {
       if (sql.includes("UPDATE users") && sql.includes("SET account_status = $1")) {
         const user = [...users.values()].find(row => row.id === values[1] && row.role === "user");
         if (!user) return { rows: [], rowCount: 0 };
+        if (values[0] === "active" && !user.activation_payment_id) return { rows: [], rowCount: 0 };
         user.account_status = values[0];
         return { rows: [{ id: user.id, full_name: user.full_name, username: user.username, email: user.email, phone: user.phone, account_status: user.account_status, created_at: user.created_at }], rowCount: 1 };
       }
@@ -130,6 +142,7 @@ function createFakeClient() {
 }
 
 pool.query = async (sql, values = []) => {
+  if (sql.includes("SELECT * FROM mpesa_payments")) return { rows: [], rowCount: 0 };
   if (sql.includes("AS total_users")) {
     const members = [...users.values()].filter(user => user.role === "user");
     return { rows: [{
@@ -282,6 +295,7 @@ test.after(async () => {
   await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   pool.query = originalQuery;
   pool.connect = originalConnect;
+  activationService.start = originalStartActivation;
   await pool.end();
 });
 
@@ -347,7 +361,11 @@ test("registers a user, creates a session, and rejects duplicate email or phone"
     })
   });
   assert.equal(response.status, 201);
-  const { user } = await response.json();
+  const { user, activation: automaticActivation } = await response.json();
+  assert.equal(automaticActivation.payment.amount, 1);
+  assert.equal(automaticActivation.payment.phone, "254712345678");
+  assert.equal(activationRequests.filter(request => request.id === user.id).length, 1);
+  assert.equal(activationRequests.find(request => request.id === user.id).phone, "+254712345678");
   assert.equal(user.email, "test.person@example.com");
   assert.equal(user.username, "test_person");
   assert.match(user.personalReferralCode, /^[A-F0-9]{24}$/);
@@ -358,13 +376,16 @@ test("registers a user, creates a session, and rejects duplicate email or phone"
   const cookie = setCookie.split(";")[0];
   const me = await fetch(`${baseUrl}/api/auth/me`, { headers: { cookie } });
   assert.equal(me.status, 403);
-  assert.match((await me.json()).error, /awaiting administrator activation/i);
+  assert.match((await me.json()).error, /KES 1.*activation fee/i);
+  const activation = await fetch(`${baseUrl}/api/payments/mpesa/activation`, { headers: { cookie } });
+  assert.equal(activation.status, 200);
+  assert.equal((await activation.json()).activationFee, 1);
   const dashboard = await fetch(`${baseUrl}/`, { headers: { cookie }, redirect: "manual" });
   assert.equal(dashboard.status, 302);
   assert.equal(dashboard.headers.get("location"), "/account-pending");
   const pendingPage = await fetch(`${baseUrl}/account-pending`, { headers: { cookie } });
   assert.equal(pendingPage.status, 200);
-  assert.match(await pendingPage.text(), /awaiting activation/i);
+  assert.match(await pendingPage.text(), /Resend KES 1 prompt/i);
 
   const referredRegistration = await fetch(`${baseUrl}/api/auth/register`, {
     method: "POST",
@@ -414,6 +435,23 @@ test("registers a user, creates a session, and rejects duplicate email or phone"
     })
   });
   assert.equal(duplicateUsername.status, 409);
+});
+
+test("preserves a registered account and session when its automatic STK request fails", async () => {
+  const startActivation = activationService.start;
+  activationService.start = async () => { throw new Error("Simulated provider failure"); };
+  try {
+    const response = await fetch(`${baseUrl}/api/auth/register`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ fullName: "Pending Payment", username: "pending_payment", email: "pending.payment@example.com", phone: "+254733000999", password: "correct horse battery", confirmPassword: "correct horse battery", acceptedTerms: true })
+    });
+    assert.equal(response.status, 201);
+    const result = await response.json();
+    assert.equal(result.user.accountStatus, "pending_verification");
+    assert.match(result.activation.error, /account was created/i);
+    assert.ok(users.has(result.user.email));
+    assert.match(response.headers.get("set-cookie"), /mulalink_session=/);
+  } finally { activationService.start = startActivation; }
 });
 
 test("signs in using a phone number and invalidates the session on logout", async () => {
@@ -501,6 +539,15 @@ test("admin APIs create and review internal-only financial records and audit eac
   assert.equal(summary.status, 200);
   assert.ok(Number((await summary.json()).summary.total_users) >= 1);
 
+  const unpaidUpdate = await fetch(`${baseUrl}/api/admin/users/${createdMember.id}/status`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, "content-type": "application/json" },
+    body: JSON.stringify({ status: "active" })
+  });
+  assert.equal(unpaidUpdate.status, 409);
+  assert.equal(users.get(createdMember.email).account_status, "pending_verification");
+  // Fixture for a verified payment; actual callback activation is covered by mpesa-payments.test.js.
+  users.get(createdMember.email).activation_payment_id = crypto.randomUUID();
   const statusUpdate = await fetch(`${baseUrl}/api/admin/users/${createdMember.id}/status`, {
     method: "PATCH",
     headers: { cookie: adminCookie, "content-type": "application/json" },

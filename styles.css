@@ -171,6 +171,9 @@ h1 { margin-bottom: 7px; color: #1a2540; font: 700 25px Manrope, sans-serif; let
 .field { display: grid; gap: 6px; color: #67728a; font-size: 9px; font-weight: 600; }
 .field input, .field select, .field textarea { width: 100%; min-height: 36px; padding: 8px 10px; border: 1px solid #e6eaf1; border-radius: 6px; color: #38435b; background: #fff; font-size: 10px; outline: none; }
 .field input:focus, .field textarea:focus, .field select:focus { border-color: #8ca3f4; box-shadow: 0 0 0 3px #4169e112; }
+.button:disabled { opacity: .55; cursor: not-allowed; }
+.payment-help, #mpesa-message { color: #67728a; font-size: 11px; line-height: 1.6; }
+.payment-detail { display: block; max-width: 260px; margin-top: 5px; color: #67728a; white-space: normal; }
 .divider { height: 1px; margin: 17px 0; background: var(--border); }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .inline-list { display: grid; }

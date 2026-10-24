@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#101d3a">
-    <meta name="description" content="Your MULALINK account is awaiting administrator activation.">
-    <title>Account awaiting activation · MULALINK</title>
+    <meta name="description" content="Confirm the KES 1 M-PESA test prompt sent automatically to your registered phone.">
+    <title>Activate your account · MULALINK</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="/auth.css">
     <style>
@@ -18,6 +18,12 @@
       .activation-card h1{margin-bottom:11px;font-size:25px}
       .activation-card p{margin-bottom:13px;color:#69748a;line-height:1.7}
       .activation-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:25px}
+      .activation-fee{display:flex;align-items:center;justify-content:space-between;margin:22px 0;padding:18px;border:1px solid #e4eafa;border-radius:10px;background:#f5f8ff;color:#283b66}
+      .activation-fee strong{font-size:26px}
+      #activation-form{display:grid;gap:14px}
+      #activation-form input{min-height:44px;font-size:14px}
+      #activation-message{margin-top:18px;font-size:13px}
+      #activation-environment{font-size:12px;color:#8b621a}
       @media(max-width:520px){.activation-card{padding:26px}.activation-actions>*{width:100%}}
     </style>
   </head>
@@ -28,12 +34,21 @@
         <span class="activation-brand-copy"><strong>MULALINK</strong><small>Account activation</small></span>
       </a>
       <div class="activation-icon" aria-hidden="true">⌛</div>
-      <div class="auth-overline">APPROVAL REQUIRED</div>
-      <h1>Your account is awaiting activation</h1>
-      <p>An administrator must activate your account before you can access the MULALINK dashboard. Your account and sign-in details are saved; please check back after approval.</p>
+      <div class="auth-overline">ONE MORE STEP</div>
+      <h1>Activate your account</h1>
+      <p>Your account is saved. We automatically send a <strong>KES 1 test payment</strong> prompt to the phone number you registered. Approve it on your phone to activate your account.</p>
+      <div class="activation-fee"><span>Activation test payment</span><strong>KES 1</strong></div>
+      <p id="activation-environment"></p>
+      <form id="activation-form">
+        <label class="field" for="activation-phone">Registered M-PESA phone number<input id="activation-phone" name="phone" type="tel" readonly></label>
+        <button class="button button-primary" id="activation-submit" type="submit" disabled>Resend KES 1 prompt</button>
+      </form>
+      <p id="activation-message" role="status" aria-live="polite">Loading your activation status…</p>
+      <p id="activation-receipt" hidden></p>
+      <p>Enter your M-PESA PIN only on your phone. Keep this page open while we confirm your payment.</p>
       <p>If you need help, contact <a href="mailto:kevox122@gmail.com?subject=MULALINK%20Account%20Activation">kevox122@gmail.com</a>. Please do not send your password.</p>
       <div class="activation-actions">
-        <a class="button button-primary" href="/">Check activation status</a>
+        <button class="button button-secondary" id="check-activation" type="button">Check payment status</button>
         <form id="sign-out-form" action="/api/auth/logout" method="post"><button class="button button-secondary" type="submit">Sign out</button></form>
       </div>
     </main>

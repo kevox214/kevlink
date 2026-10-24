@@ -11,6 +11,10 @@ const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const { loginSchema, registrationSchema } = require("./auth-validation");
 const { migrate, pool } = require("./db");
+const { createDarajaClient } = require("./daraja");
+const { activationFee, createActivationService, createMpesaRouter } = require("./mpesa-payments");
+const daraja = createDarajaClient();
+const activationService = createActivationService({ pool, daraja });
 
 const app = express();
 const publicRoot = path.resolve(__dirname, "..");
@@ -137,7 +141,7 @@ async function createSession(client, userId, res) {
   res.cookie(sessionCookieName, rawToken, sessionCookieOptions);
 }
 
-async function requireSession(req, res, next) {
+async function requireAuthenticatedSession(req, res, next) {
   const token = readSessionToken(req);
   if (!token) return res.status(401).json({ error: "Please sign in to continue." });
   try {
@@ -155,14 +159,21 @@ async function requireSession(req, res, next) {
     if (result.rows[0].account_status === "suspended" || result.rows[0].account_status === "restricted") {
       return res.status(403).json({ error: "This account is currently restricted. Contact support for assistance." });
     }
-    if (result.rows[0].role !== "admin" && result.rows[0].account_status !== "active") {
-      return res.status(403).json({ error: "Your account is awaiting administrator activation. You can access the dashboard after it is approved." });
-    }
     req.user = result.rows[0];
     return next();
   } catch (error) {
     return next(error);
   }
+}
+
+function requireSession(req, res, next) {
+  return requireAuthenticatedSession(req, res, error => {
+    if (error) return next(error);
+    if (req.user.role !== "admin" && req.user.account_status !== "active") {
+      return res.status(403).json({ error: `Pay the KES ${activationFee} M-PESA activation fee to access your account.`, code: "activation_required" });
+    }
+    return next();
+  });
 }
 
 function requireAdmin(req, res, next) {
@@ -171,6 +182,8 @@ function requireAdmin(req, res, next) {
   }
   return next();
 }
+
+app.use("/api/payments/mpesa", createMpesaRouter({ pool, requireSession, requireAuthenticatedSession, daraja, activationService }));
 
 function adminAudit(client, actorId, action, entityType, entityId, details) {
   return client.query(
@@ -220,7 +233,11 @@ app.get("/", async (req, res, next) => {
 });
 app.get("/register", (_req, res, next) => sendFile(res, "register.html").catch(next));
 app.get("/login", (_req, res, next) => sendFile(res, "login.html").catch(next));
-app.get("/account-pending", (_req, res, next) => sendFile(res, "account-pending.html").catch(next));
+app.get("/account-pending", requireAuthenticatedSession, (req, res, next) => {
+  if (req.user.role === "admin") return res.redirect("/admin");
+  if (req.user.account_status === "active") return res.redirect("/");
+  return sendFile(res, "account-pending.html").catch(next);
+});
 app.get("/admin", requireSession, (req, res, next) => {
   if (req.user.role !== "admin") return res.status(403).send("Administrator access is required.");
   return sendFile(res, "admin.html").catch(next);
@@ -260,7 +277,17 @@ app.post("/api/auth/register", async (req, res, next) => {
     );
     await createSession(client, inserted.rows[0].id, res);
     await client.query("COMMIT");
-    res.status(201).json({ user: publicUser(inserted.rows[0]) });
+    client.release();
+    client = null;
+    // Registration is durable before contacting M-PESA. A failed prompt must not undo the account.
+    let activation;
+    try {
+      activation = await activationService.start({ ...inserted.rows[0], role: "user" });
+    } catch (error) {
+      console.error("Registration activation request failed:", error.code || error.name);
+      activation = { error: "Your account was created, but the M-PESA prompt could not be sent. Retry from the activation page." };
+    }
+    res.status(201).json({ user: publicUser(inserted.rows[0]), activation });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(rollbackError => console.error("Registration rollback failed:", rollbackError.message));
     if (error.code === "23505") return res.status(409).json({ error: "That username, email address, or phone number is already in use." });
@@ -375,12 +402,16 @@ app.patch("/api/admin/users/:id/status", requireSession, requireAdmin, async (re
       `UPDATE users
        SET account_status = $1, updated_at = NOW()
        WHERE id = $2 AND role = 'user'
+         AND ($1 <> 'active' OR EXISTS (
+           SELECT 1 FROM mpesa_payments p WHERE p.user_id = users.id AND p.purpose = 'activation'
+             AND p.status = 'succeeded' AND p.environment = 'production' AND p.amount IN (1, 100)
+         ))
        RETURNING id, full_name, username, email, phone, account_status, created_at`,
       [status, req.params.id]
     );
     if (!updated.rowCount) {
       await client.query("ROLLBACK");
-      return res.status(404).json({ error: "Member account not found." });
+      return res.status(status === "active" ? 409 : 404).json({ error: status === "active" ? `A confirmed KES ${activationFee} M-PESA activation payment is required before activating this member.` : "Member account not found." });
     }
     await adminAudit(client, req.user.id, "user.status_changed", "user", updated.rows[0].id, { status });
     await client.query("COMMIT");
@@ -775,4 +806,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, start };
+module.exports = { app, start, activationService };
